@@ -1,20 +1,33 @@
 import { useState } from "react";
-import { Eye, EyeOff, Copy, Key } from "lucide-react";
+import { Eye, EyeOff, Copy, Key, Trash2, Edit } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Button } from "./ui/button";
+import SecretForm from "./SecretForm";
+import type { Password } from "./PasswordVault";
 
-interface PasswordEntryProps {
-  title: string;
-  username: string;
-  password: string;
-  onEdit: () => void;
+interface PasswordEntryProps extends Password {
+  onEdit: (password: Password) => void;
+  onDelete: () => void;
 }
 
-const PasswordEntry = ({ title, username, password, onEdit }: PasswordEntryProps) => {
+const PasswordEntry = ({ id, title, username, password, customFields = [], onEdit, onDelete }: PasswordEntryProps) => {
   const [showPassword, setShowPassword] = useState(false);
 
-  const copyToClipboard = async (text: string, type: "password" | "username") => {
+  const copyToClipboard = async (text: string, type: "password" | "username" | "field") => {
     await navigator.clipboard.writeText(text);
-    toast.success(`${type === "password" ? "Password" : "Username"} copied to clipboard`);
+    toast.success(`${type === "password" ? "Password" : type === "username" ? "Username" : "Field value"} copied to clipboard`);
+  };
+
+  const handleEdit = (updatedData: Omit<Password, "id">) => {
+    onEdit({ ...updatedData, id });
+  };
+
+  const handleDelete = () => {
+    if (window.confirm("Are you sure you want to delete this secret?")) {
+      onDelete();
+      toast.success("Secret deleted successfully");
+    }
   };
 
   return (
@@ -46,9 +59,32 @@ const PasswordEntry = ({ title, username, password, onEdit }: PasswordEntryProps
               <Eye className="w-4 h-4 text-vault-secondary" />
             )}
           </button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Edit className="w-4 h-4 text-vault-secondary" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Secret</DialogTitle>
+              </DialogHeader>
+              <SecretForm
+                onSubmit={handleEdit}
+                initialData={{ title, username, password, customFields }}
+              />
+            </DialogContent>
+          </Dialog>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDelete}
+          >
+            <Trash2 className="w-4 h-4 text-red-500" />
+          </Button>
         </div>
       </div>
-      <div className="mt-4">
+      <div className="mt-4 space-y-2">
         <div className="relative">
           <input
             type={showPassword ? "text" : "password"}
@@ -63,6 +99,24 @@ const PasswordEntry = ({ title, username, password, onEdit }: PasswordEntryProps
             <Copy className="w-4 h-4 text-vault-muted hover:text-vault-secondary transition-colors" />
           </button>
         </div>
+        {customFields.length > 0 && (
+          <div className="mt-4 space-y-2">
+            {customFields.map((field) => (
+              <div key={field.id} className="flex items-center justify-between bg-vault-background rounded p-2">
+                <div>
+                  <span className="text-sm font-medium text-vault-foreground">{field.label}:</span>
+                  <span className="ml-2 text-sm text-vault-muted">{field.value}</span>
+                </div>
+                <button
+                  onClick={() => copyToClipboard(field.value, "field")}
+                  className="p-1 hover:bg-vault-card rounded-full transition-colors"
+                >
+                  <Copy className="w-4 h-4 text-vault-muted hover:text-vault-secondary" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
