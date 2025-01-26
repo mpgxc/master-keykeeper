@@ -13,6 +13,7 @@ interface PasswordEntryProps extends Password {
 
 const PasswordEntry = ({ id, title, username, password, customFields = [], onEdit, onDelete }: PasswordEntryProps) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const copyToClipboard = async (text: string, type: "password" | "username" | "field") => {
     await navigator.clipboard.writeText(text);
@@ -21,12 +22,12 @@ const PasswordEntry = ({ id, title, username, password, customFields = [], onEdi
 
   const handleEdit = (updatedData: Omit<Password, "id">) => {
     onEdit({ ...updatedData, id });
+    setOpen(false);
   };
 
   const handleDelete = () => {
     if (window.confirm("Are you sure you want to delete this secret?")) {
       onDelete();
-      toast.success("Secret deleted successfully");
     }
   };
 
@@ -59,7 +60,7 @@ const PasswordEntry = ({ id, title, username, password, customFields = [], onEdi
               <Eye className="w-4 h-4 text-vault-secondary" />
             )}
           </button>
-          <Dialog>
+          <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Edit className="w-4 h-4 text-vault-secondary" />

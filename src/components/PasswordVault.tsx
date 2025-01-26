@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Search, Plus } from "lucide-react";
+import { toast } from "sonner";
 import PasswordEntry from "./PasswordEntry";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
@@ -21,6 +22,7 @@ export interface Password {
 
 const PasswordVault = () => {
   const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
   const [passwords, setPasswords] = useState<Password[]>([
     {
       id: "1",
@@ -43,16 +45,20 @@ const PasswordVault = () => {
   const handleAddSecret = (newSecret: Omit<Password, "id">) => {
     const newId = (passwords.length + 1).toString();
     setPasswords([...passwords, { ...newSecret, id: newId }]);
+    setOpen(false);
+    toast.success("Segredo adicionado com sucesso!");
   };
 
   const handleEditSecret = (updatedSecret: Password) => {
     setPasswords(passwords.map(p => 
       p.id === updatedSecret.id ? updatedSecret : p
     ));
+    toast.success("Segredo atualizado com sucesso!");
   };
 
   const handleDeleteSecret = (id: string) => {
     setPasswords(passwords.filter(p => p.id !== id));
+    toast.success("Segredo excluído com sucesso!");
   };
 
   const filteredPasswords = passwords.filter(
@@ -74,7 +80,7 @@ const PasswordVault = () => {
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-vault-primary/20 transition-all"
           />
         </div>
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button className="bg-vault-primary text-white hover:bg-vault-primary/90">
               <Plus className="w-4 h-4" />
@@ -94,7 +100,7 @@ const PasswordVault = () => {
           <PasswordEntry
             key={pass.id}
             {...pass}
-            onEdit={() => handleEditSecret(pass)}
+            onEdit={handleEditSecret}
             onDelete={() => handleDeleteSecret(pass.id)}
           />
         ))}
