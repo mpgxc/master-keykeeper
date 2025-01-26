@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff, Copy, Key, Trash2, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
 import { Button } from "./ui/button";
 import SecretForm from "./SecretForm";
 import type { Password } from "./PasswordVault";
@@ -23,12 +24,6 @@ const PasswordEntry = ({ id, title, username, password, customFields = [], onEdi
   const handleEdit = (updatedData: Omit<Password, "id">) => {
     onEdit({ ...updatedData, id });
     setOpen(false);
-  };
-
-  const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this secret?")) {
-      onDelete();
-    }
   };
 
   return (
@@ -76,13 +71,27 @@ const PasswordEntry = ({ id, title, username, password, customFields = [], onEdi
               />
             </DialogContent>
           </Dialog>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleDelete}
-          >
-            <Trash2 className="w-4 h-4 text-red-500" />
-          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Trash2 className="w-4 h-4 text-red-500" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete your secret.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={onDelete} className="bg-red-500 hover:bg-red-600">
+                  Delete
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
       <div className="mt-4 space-y-2">
