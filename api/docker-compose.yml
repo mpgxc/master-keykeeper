@@ -1,0 +1,27 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: secrets.db
+    environment:
+      POSTGRES_USER: docker
+      POSTGRES_PASSWORD: docker
+      POSTGRES_DB: docker
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  # api:
+  #   build: .
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     DATABASE_URL: "postgresql://docker:docker@docker:5432/secrets?schema=public"
+  #     MASTER_KEY: "supersecret123"
+  #   depends_on:
+  #     - postgres
+
+volumes:
+  postgres-data:

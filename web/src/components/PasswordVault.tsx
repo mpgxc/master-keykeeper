@@ -1,12 +1,12 @@
-import { useState, useEffect } from "react";
-import { Search, Plus } from "lucide-react";
+import { api } from "@/services/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Plus, Search } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 import PasswordEntry from "./PasswordEntry";
+import SecretForm from "./SecretForm";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
-import SecretForm from "./SecretForm";
-import { api } from "@/services/api";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface CustomField {
   id: string;
