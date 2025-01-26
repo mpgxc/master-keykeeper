@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, Plus } from "lucide-react";
 import { toast } from "sonner";
 import PasswordEntry from "./PasswordEntry";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import SecretForm from "./SecretForm";
+import { api } from "@/services/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface CustomField {
   id: string;
@@ -23,42 +25,48 @@ export interface Password {
 const PasswordVault = () => {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
-  const [passwords, setPasswords] = useState<Password[]>([
-    {
-      id: "1",
-      title: "Gmail",
-      username: "user@gmail.com",
-      password: "example123",
-      customFields: [
-        { id: "1", label: "Recovery Email", value: "backup@email.com" }
-      ]
+  const queryClient = useQueryClient();
+
+  const { data: passwords = [], isLoading } = useQuery({
+    queryKey: ['passwords'],
+    queryFn: api.fetchSecrets,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: api.createSecret,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['passwords'] });
+      toast.success("Secret added successfully!");
+      setOpen(false);
     },
-    {
-      id: "2",
-      title: "GitHub",
-      username: "developer",
-      password: "secure456",
-      customFields: []
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: api.updateSecret,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['passwords'] });
+      toast.success("Secret updated successfully!");
     },
-  ]);
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: api.deleteSecret,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['passwords'] });
+      toast.success("Secret deleted successfully!");
+    },
+  });
 
   const handleAddSecret = (newSecret: Omit<Password, "id">) => {
-    const newId = (passwords.length + 1).toString();
-    setPasswords([...passwords, { ...newSecret, id: newId }]);
-    setOpen(false);
-    toast.success("Segredo adicionado com sucesso!");
+    createMutation.mutate(newSecret);
   };
 
   const handleEditSecret = (updatedSecret: Password) => {
-    setPasswords(passwords.map(p => 
-      p.id === updatedSecret.id ? updatedSecret : p
-    ));
-    toast.success("Segredo atualizado com sucesso!");
+    updateMutation.mutate(updatedSecret);
   };
 
   const handleDeleteSecret = (id: string) => {
-    setPasswords(passwords.filter(p => p.id !== id));
-    toast.success("Segredo excluído com sucesso!");
+    deleteMutation.mutate(id);
   };
 
   const filteredPasswords = passwords.filter(
@@ -66,6 +74,10 @@ const PasswordVault = () => {
       pass.title.toLowerCase().includes(search.toLowerCase()) ||
       pass.username.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (isLoading) {
+    return <div className="text-center">Loading...</div>;
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
